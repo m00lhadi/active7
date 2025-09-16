@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>نشاط تفاعلي: رحلة داخل مكونات الحاسوب</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --brand:#22d3ee;       /* cyan-400 */
+      --good:#22c55e;        /* green-500 */
+      --bad:#ef4444;         /* red-500 */
+      --amber:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans",sans-serif;
+      background: radial-gradient(1200px 600px at 90% -10%, rgba(34,211,238,.15), transparent),
+                  radial-gradient(1000px 500px at 10% 110%, rgba(34,197,94,.10), transparent),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.75;
+    }
+    a{color:var(--brand);text-decoration:none}
+    .container{max-width:1100px;margin:24px auto;padding:16px}
+    header{
+      background: linear-gradient(135deg, rgba(34,211,238,.15), rgba(99,102,241,.15));
+      border:1px solid rgba(148,163,184,.25);
+      padding:20px;
+      border-radius:18px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    header:before{
+      content:"";
+      position:absolute;inset:-2px;
+      background: radial-gradient(400px 120px at 20% 0%, rgba(255,255,255,.06), transparent);
+      pointer-events:none;
+    }
+    h1{margin:0 0 8px;font-weight:800;letter-spacing:.3px}
+    .subtitle{color:var(--muted);margin:0}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){ .grid-2{grid-template-columns:1fr 1fr} }
+    .card{
+      background: linear-gradient(180deg, rgba(17,24,39,.85), rgba(17,24,39,.65));
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:16px;
+      padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{margin-top:0;font-size:1.2rem}
+    .hero{
+      display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+    }
+    .hero .badge{
+      background:rgba(34,197,94,.12);
+      color:#86efac;border:1px solid rgba(34,197,94,.35);
+      padding:6px 10px;border-radius:999px;font-size:.85rem
+    }
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.22);color:var(--muted);font-size:.9rem}
+    .flex{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{
+      cursor:pointer;
+      border:1px solid rgba(148,163,184,.35);
+      background:linear-gradient(180deg, rgba(30,41,59,.95), rgba(15,23,42,.95));
+      color:var(--text);
+      padding:10px 14px;border-radius:12px;
+      font-weight:600;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .2s ease;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.3);border-color:rgba(34,211,238,.55)}
+    .btn-primary{border-color:rgba(34,211,238,.5)}
+    .btn-ghost{background:transparent}
+    .hint{color:var(--muted);font-size:.95rem}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.35);padding:2px 6px;border-radius:6px;font-size:.9rem;color:#e2e8f0}
+    /* Tooltips */
+    .parts{display:grid;grid-template-columns:repeat(3, 1fr);gap:10px}
+    .part{
+      position:relative;padding:12px;border-radius:14px;
+      border:1px solid rgba(148,163,184,.2);
+      background:rgba(2,6,23,.55);
+      min-height:64px;display:flex;gap:12px;align-items:center;
+      transition:transform .12s ease, border-color .2s ease, background .2s ease;
+      cursor:help;
+    }
+    .part:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.5);background:rgba(2,6,23,.75)}
+    .part .icon{font-size:1.6rem}
+    .tooltip{
+      position:absolute;inset-inline-start:12px;inset-block-end:calc(100% + 8px);
+      min-width:220px;max-width:320px;
+      background:#0b1220;color:#e2e8f0;border:1px solid rgba(148,163,184,.35);
+      padding:10px;border-radius:12px;font-size:.95rem;line-height:1.6;
+      box-shadow:0 12px 30px rgba(0,0,0,.35);opacity:0;transform:translateY(6px);pointer-events:none;transition:.15s ease;
+      z-index:10;
+    }
+    .part:hover .tooltip{opacity:1;transform:translateY(0)}
+    /* Drag & Drop */
+    .drag-area{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:900px){ .drag-area{grid-template-columns:280px 1fr} }
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{
+      user-select:none; -webkit-user-drag: element;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      border:1px dashed rgba(148,163,184,.45);
+      background:rgba(148,163,184,.12);
+      cursor:grab;
+      transition:transform .12s ease, background .2s ease, border-color .2s ease;
+    }
+    .chip:active{cursor:grabbing;transform:scale(.98)}
+    .bin{
+      min-height:120px;border:2px dashed rgba(148,163,184,.3);
+      border-radius:14px;padding:10px;
+      display:grid;gap:8px;align-content:start;
+      background:linear-gradient(180deg, rgba(15,23,42,.6), rgba(2,6,23,.5));
+      transition:border-color .2s ease, background .2s ease;
+    }
+    .bin.highlight{border-color:var(--brand);background:linear-gradient(180deg, rgba(34,211,238,.08), rgba(2,6,23,.5))}
+    .bin .title{color:var(--muted);font-weight:700}
+    .chip[data-correct="true"]{border-color:rgba(34,197,94,.8);background:rgba(34,197,94,.15)}
+    .chip[data-correct="false"]{border-color:rgba(239,68,68,.8);background:rgba(239,68,68,.15)}
+    .score{font-weight:800}
+    /* Quiz */
+    .quiz-option{display:block;margin:8px 0;padding:10px 12px;border:1px solid rgba(148,163,184,.25);border-radius:10px;cursor:pointer;background:rgba(2,6,23,.5)}
+    .quiz-option input{margin-inline-start:8px}
+    .correct{color:#86efac}
+    .wrong{color:#fecaca}
+    footer{color:var(--muted);text-align:center;margin:24px 0}
+    .sep{height:1px;background:linear-gradient(90deg, transparent, rgba(148,163,184,.3), transparent);margin:18px 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="hero">
+        <h1>🎮 نشاط تفاعلي: <span style="color:var(--brand)">رحلة داخل مكونات الحاسوب</span></h1>
+        <span class="badge">للصفوف 7–9</span>
+      </div>
+      <p class="subtitle">تعرّف على وحدات <strong>الإدخال</strong> و<strong>الإخراج</strong> و<strong>التخزين</strong> عبر خريطة مرئية، لعبة سحب وإفلات، واختبار ختامي قصير.</p>
+      <div class="sep"></div>
+      <div class="flex">
+        <span class="pill">🖱️ تلميح: اسحب البطاقات إلى الصناديق المناسبة</span>
+        <span class="pill">⌨️ اختبر نفسك بسؤال ختامي</span>
+        <span class="pill">💾 التقدّم يُحفظ محليًا</span>
+      </div>
+    </header>
+
+    <!-- Section 1: خريطة مرئية -->
+    <section class="card" aria-labelledby="map-title">
+      <h2 id="map-title">🧭 خريطة مرئية سريعة</h2>
+      <p class="hint">مرّر المؤشر فوق أي جزء لرؤية وصف مختصر.</p>
+      <div class="parts">
+        <div class="part"><div class="icon">⌨️</div><div>لوحة المفاتيح</div>
+          <div class="tooltip">جهاز إدخال يسمح بكتابة الأوامر والنصوص إلى الحاسوب.</div>
+        </div>
+        <div class="part"><div class="icon">🖱️</div><div>الفأرة</div>
+          <div class="tooltip">جهاز إدخال للتأشير والتحديد والتنقّل في الواجهة.</div>
+        </div>
+        <div class="part"><div class="icon">🖨️</div><div>الطابعة</div>
+          <div class="tooltip">وحدة إخراج تقوم بطباعة المستندات والصور على الورق.</div>
+        </div>
+        <div class="part"><div class="icon">🖥️</div><div>الشاشة</div>
+          <div class="tooltip">وحدة إخراج تعرض النصوص والصور والفيديو.</div>
+        </div>
+        <div class="part"><div class="icon">💽</div><div>القرص الصلب</div>
+          <div class="tooltip">وسيط تخزين دائم للاحتفاظ بالملفات والبرامج.</div>
+        </div>
+        <div class="part"><div class="icon">🔊</div><div>السماعات</div>
+          <div class="tooltip">وحدة إخراج لتحويل الصوت الرقمي إلى موجات صوتية مسموعة.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: لعبة السحب والإفلات -->
+    <section class="card grid grid-2" aria-labelledby="drag-title">
+      <div>
+        <h2 id="drag-title">🧩 لعبة التصنيف: إدخال / إخراج / تخزين</h2>
+        <p class="hint">اسحب كل بطاقة إلى الصندوق المناسب. ثم اضغط <span class="kbd">تحقّق</span>.</p>
+        <div class="chips" id="chips">
+          <!-- data-type: input/output/storage -->
+          <div class="chip" draggable="true" data-type="input">⌨️ لوحة المفاتيح</div>
+          <div class="chip" draggable="true" data-type="input">🖱️ الفأرة</div>
+          <div class="chip" draggable="true" data-type="input">🖨️ الماسح الضوئي</div>
+          <div class="chip" draggable="true" data-type="output">🖥️ الشاشة</div>
+          <div class="chip" draggable="true" data-type="output">🖨️ الطابعة</div>
+          <div class="chip" draggable="true" data-type="output">🔊 السماعات</div>
+          <div class="chip" draggable="true" data-type="storage">💽 القرص الصلب</div>
+          <div class="chip" draggable="true" data-type="storage">💾 USB فلاش</div>
+          <div class="chip" draggable="true" data-type="storage">📀 أسطوانة DVD</div>
+        </div>
+        <div class="flex" style="margin-top:10px">
+          <button class="btn btn-primary" id="checkBtn">تحقّق</button>
+          <button class="btn btn-ghost" id="resetBtn">إعادة الضبط</button>
+          <span class="hint">النتيجة: <span class="score" id="score">0</span> / 9</span>
+        </div>
+      </div>
+
+      <div class="drag-area">
+        <div class="bin" data-accept="input" id="bin-input" aria-label="صندوق الإدخال">
+          <div class="title">🟦 وحدات الإدخال</div>
+        </div>
+        <div class="bin" data-accept="output" id="bin-output" aria-label="صندوق الإخراج">
+          <div class="title">🟩 وحدات الإخراج</div>
+        </div>
+        <div class="bin" data-accept="storage" id="bin-storage" aria-label="صندوق التخزين">
+          <div class="title">🟨 وحدات التخزين</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: سؤال ختامي -->
+    <section class="card" aria-labelledby="quiz-title">
+      <h2 id="quiz-title">✅ سؤال ختامي سريع</h2>
+      <p class="hint">اختر الإجابة الصحيحة ثم اضغط <span class="kbd">تحقّق الإجابة</span>.</p>
+      <form id="quizForm">
+        <label class="quiz-option">
+          <input type="radio" name="q1" value="a"> أ) لوحة المفاتيح
+        </label>
+        <label class="quiz-option">
+          <input type="radio" name="q1" value="b"> ب) الطابعة
+        </label>
+        <label class="quiz-option">
+          <input type="radio" name="q1" value="c"> ج) الماسح الضوئي
+        </label>
+      </form>
+      <div class="flex">
+        <button class="btn btn-primary" id="answerBtn">تحقّق الإجابة</button>
+        <span id="quizFeedback" class="hint"></span>
+      </div>
+    </section>
+
+    <footer>
+      صُمّم بأسلوب بصري حديث وخط <strong>Cairo</strong>، مع دعم <strong>RTL</strong> الكامل. يمكن حفظ الصفحة وتشغيلها محليًا دون إنترنت.
+    </footer>
+  </div>
+
+<script>
+  // ====== Drag & Drop Logic ======
+  const chips = document.querySelectorAll(".chip");
+  const bins = document.querySelectorAll(".bin");
+  const chipsContainer = document.getElementById("chips");
+  const scoreEl = document.getElementById("score");
+
+  let placed = new Map(); // chip -> binAccept
+  let score = 0;
+
+  function saveProgress() {
+    const data = Array.from(placed).map(([text, bin]) => ({ text, bin }));
+    localStorage.setItem("hardware-placed", JSON.stringify(data));
+    localStorage.setItem("hardware-score", String(score));
+  }
+  function loadProgress() {
+    const raw = localStorage.getItem("hardware-placed");
+    const savedScore = localStorage.getItem("hardware-score");
+    if(raw){
+      try {
+        const arr = JSON.parse(raw);
+        // Place chips back to saved bins
+        arr.forEach(({text, bin}) => {
+          const chip = Array.from(chips).find(c => c.textContent.trim() === text.trim());
+          const target = document.querySelector('.bin[data-accept="'+bin+'"]');
+          if(chip && target){ target.appendChild(chip); placed.set(text, bin); }
+        });
+      } catch {}
+    }
+    if(savedScore){ score = parseInt(savedScore)||0; scoreEl.textContent = score; }
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", chip.textContent);
+      e.dataTransfer.setData("type", chip.dataset.type);
+      setTimeout(() => chip.classList.add("dragging"), 0);
+    });
+    chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
+  });
+
+  bins.forEach(bin => {
+    bin.addEventListener("dragover", (e) => { e.preventDefault(); bin.classList.add("highlight"); });
+    bin.addEventListener("dragleave", () => bin.classList.remove("highlight"));
+    bin.addEventListener("drop", (e) => {
+      e.preventDefault();
+      bin.classList.remove("highlight");
+      const dragging = document.querySelector(".chip.dragging");
+      if(dragging){ bin.appendChild(dragging); }
+    });
+  });
+
+  document.getElementById("checkBtn").addEventListener("click", () => {
+    score = 0;
+    document.querySelectorAll(".chip").forEach(ch => {
+      const type = ch.dataset.type;
+      const parentBin = ch.closest(".bin");
+      if(parentBin){
+        const accept = parentBin.dataset.accept;
+        const correct = (type === accept);
+        ch.dataset.correct = correct ? "true" : "false";
+        if(correct) score++;
+        placed.set(ch.textContent.trim(), accept);
+      } else {
+        ch.dataset.correct = "";
+        placed.delete(ch.textContent.trim());
+      }
+    });
+    scoreEl.textContent = score;
+    saveProgress();
+    if(score === document.querySelectorAll(".chip").length){
+      toast("🎉 أحسنت! صنّفت كل المكونات بشكل صحيح.");
+    } else {
+      toast("📌 هناك عناصر في غير مكانها. حاول مرة أخرى.");
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(ch => {
+      ch.dataset.correct = "";
+      chipsContainer.appendChild(ch);
+    });
+    score = 0; scoreEl.textContent = "0";
+    placed.clear();
+    saveProgress();
+    toast("تمت إعادة الضبط.");
+  });
+
+  // ====== Quiz Logic ======
+  document.getElementById("answerBtn").addEventListener("click", () => {
+    const selected = document.querySelector('input[name="q1"]:checked');
+    const feedback = document.getElementById("quizFeedback");
+    if(!selected){ feedback.textContent = "اختر إجابة أولًا."; return; }
+    if(selected.value === "b"){
+      feedback.innerHTML = "<span class='correct'>إجابة صحيحة: الطابعة وحدة إخراج ✅</span>";
+      confetti();
+    } else {
+      feedback.innerHTML = "<span class='wrong'>ليست صحيحة. تذكّر: المخارج تُظهر النتائج للمستخدم.</span>";
+    }
+  });
+
+  // ====== Tiny toast ======
+  function toast(msg){
+    let t = document.createElement("div");
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position:"fixed", insetInline:"0", bottom:"18px", margin:"0 auto",
+      padding:"10px 14px", background:"rgba(2,6,23,.9)", color:"#e5e7eb",
+      border:"1px solid rgba(148,163,184,.35)", borderRadius:"12px",
+      maxWidth:"90%", width:"fit-content", zIndex:9999, boxShadow:"0 12px 26px rgba(0,0,0,.35)"
+    });
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 2200);
+  }
+
+  // ====== Minimal confetti (no libs) ======
+  function confetti(){
+    const n=30, dur=1200;
+    for(let i=0;i<n;i++){
+      const s=document.createElement("span");
+      s.textContent="★";
+      s.style.position="fixed";
+      s.style.left = (Math.random()*100)+"%";
+      s.style.top = "-20px";
+      s.style.fontSize = (12+Math.random()*18)+"px";
+      s.style.transition = `transform ${dur}ms cubic-bezier(.2,.8,.2,1), opacity ${dur}ms`;
+      s.style.transform = `translateY(${window.innerHeight+40}px) rotate(${Math.random()*720-360}deg)`;
+      s.style.opacity = "0";
+      document.body.appendChild(s);
+      setTimeout(()=>{ s.style.opacity="1"; },10);
+      setTimeout(()=>{ s.remove(); }, dur+200);
+    }
+  }
+
+  // Load saved state
+  loadProgress();
+</script>
+</body>
+</html>
